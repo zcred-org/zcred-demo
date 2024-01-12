@@ -1,0 +1,52 @@
+{
+  "name": "zkhub",
+  "version": "1.0.0",
+  "main": "./dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "npx tsm ./src/main.ts",
+    "test": "npx tsm ./node_modules/uvu/bin.js ./test"
+  },
+  "keywords": [],
+  "type": "module",
+  "author": "",
+  "devDependencies": {
+    "@types/node": "^18.11.10",
+    "prettier": "^2.8.3",
+    "sinon": "^15.0.1",
+    "tsm": "^2.3.0",
+    "typescript": "^4.9.5",
+    "uvu": "^0.5.6",
+    "watchlist": "^0.3.1"
+  },
+  "dependencies": {
+    "@fastify/cors": "^8.2.0",
+    "@fastify/static": "^6.9.0",
+    "@stablelib/sha256": "^1.0.1",
+    "deep-sort-object": "^1.0.2",
+    "fastify": "4.23.2",
+    "fastify-cors": "^6.1.0",
+    "o1js": "0.15.0",
+    "o1js-trgraph": "1.0.4",
+    "pino": "^8.10.0",
+    "pino-pretty": "^9.3.0",
+    "sort-keys": "^5.0.0",
+    "uint8arrays": "^4.0.3",
+    "o1js-jal": "0.0.4"
+  },
+  "files": [
+    "./dist"
+  ],
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pave1Pal/vc-provider.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Pave1Pal/vc-provider/issues"
+  },
+  "homepage": "https://github.com/Pave1Pal/vc-provider#readme",
+  "description": ""
+}

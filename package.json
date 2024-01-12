@@ -1,0 +1,14 @@
+{
+  "name": "zcred-demo",
+  "private": false,
+  "version": "0.0.1",
+  "description": "Monorepo for demo zcred",
+  "scripts": {
+    "build": "pnpm run -r build",
+    "test": "pnpm run -r test",
+    "dev": "pnpm run -r dev",
+    "docker:build": "npm run docker:backend && npm run docker:fronend",
+    "docker:backend": "docker build -t backend -f Dockerfile.backend .",
+    "docker:frontend": "docker build -t frontend -f Dockerfile.frontend ."
+  }
+}
