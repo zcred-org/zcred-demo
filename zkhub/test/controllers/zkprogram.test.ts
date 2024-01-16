@@ -153,20 +153,14 @@ test("create and get", async () => {
     body: program
   });
   a.is(createResp.statusCode, 200, `Create zk-program status code is not 200`);
-  const { programURL } = JSON.parse(createResp.body) as { programURL: string };
+  const { programURL, programId } = JSON.parse(createResp.body) as { programURL: string, programId: string };
   console.log(programURL);
   const getResp = await fastify.inject({
     method: "GET",
-    url: "/api/zkprogram/1R18RPGqBGJfm0disUswAeJ71EKPktH_xaG_ekJYRZ0/program.js",
+    url: `/api/zkprogram/${programId}.js`,
   });
   a.is(getResp.statusCode, 200, `Get zk program resp status code is not 200`);
   a.is(getResp.headers["content-type"], "text/javascript");
-});
-
-test("", async () => {
-  // @ts-ignore
-  const program = await import("http://127.0.0.1:8081/api/zkprogram/1R18RPGqBGJfm0disUswAeJ71EKPktH_xaG_ekJYRZ0/program.js");
-  console.log(program);
 });
 
 test.run();

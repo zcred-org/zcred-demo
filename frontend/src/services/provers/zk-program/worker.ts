@@ -1,24 +1,28 @@
 import { o1jsJal, Program } from "o1js-jal";
-import { JsonProof, Proof } from "o1js";
+import { JsonProof, Proof, verify } from "o1js";
 import { PassportCred } from "@zcredjs/core";
+import { JsonPublicInput, PublicInput } from "@/types/index";
+import { contained, PublicInputMapper } from "@/util/index";
 import { ZkHub } from "@/services/zk-hub";
-import { PublicInputMapper } from "@/util/index.js";
 
 export type CreateProofResult = {
   verificationKey: string;
   proof: JsonProof;
-  publicInput: Record<string, any>
+  publicInput: JsonPublicInput
   error?: string;
 }
 
 async function createProof(program: Program, cred: PassportCred): Promise<CreateProofResult> {
   try {
-    const { programURL } = await ZkHub.createProgram(program);
-    const { zkProgram, PublicInput } = await import(programURL);
+    const { programURL, programId } = await ZkHub.createProgram(program);
+    const jalProgram = o1jsJal.initProgram(program);
+    console.log(`http://localhost:8081/api/zkprogram/${programId}.js`);
+    const { zkProgram, PublicInput } = await import(
+      /* webpackIgnore: true */
+      `http://localhost:8081/api/zkprogram/${programId}.js`);
     console.log(`zk-program imported`);
     const { verificationKey } = await zkProgram.compile();
     console.log(`zk-program compiled`);
-    const jalProgram = o1jsJal.initProgram(program);
 
     const unixNow = new Date().getTime();
     const unix19Now = unixNow + 2208988800000;
@@ -36,23 +40,26 @@ async function createProof(program: Program, cred: PassportCred): Promise<Create
     const {
       privateInput,
       publicInput
-    } = jalProgram.toInput<{ privateInput: any[], publicInput: Record<string, any> }>(inputSetup);
+    } = jalProgram.toInput<{ privateInput: any[], publicInput: PublicInput }>(inputSetup);
     console.log(`zk-program execute start`);
     const proof: Proof<any, void> = await zkProgram.execute(
       new PublicInput(publicInput),
       ...privateInput
     );
     console.log(`zk-program execute end`);
+    const verified = await verify(proof.toJSON(), verificationKey.data);
+    console.log(verified);
     return {
-      verificationKey: verificationKey,
+      verificationKey: verificationKey.data,
       proof: proof.toJSON(),
       publicInput: PublicInputMapper.toJson(publicInput)
     };
   } catch (e) {
+    console.log(e);
     return {
       verificationKey: "",
       proof: { publicInput: [], publicOutput: [], proof: "", maxProofsVerified: 1 },
-      publicInput: {},
+      publicInput: {} as JsonPublicInput,
       error: String(e)
     };
   }
@@ -89,12 +96,12 @@ function isCreateProofReq(data: unknown): data is CreateProofReq {
   return (
     typeof data === "object" &&
     data !== null &&
-    "id" in data &&
+    contained("id", data) &&
     typeof data.id === "number" &&
-    "program" in data &&
+    contained("program", data) &&
     typeof data.program === "object" &&
     data.program !== null &&
-    "cred" in data &&
+    contained("cred", data) &&
     typeof data.cred === "object" &&
     data.cred !== null
   );
@@ -104,7 +111,7 @@ function isWorkerReq(data: unknown): data is WorkerReq {
   return (
     typeof data === "object" &&
     data !== null &&
-    "id" in data &&
+    contained("id", data) &&
     typeof data.id === "number"
   );
 }

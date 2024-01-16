@@ -3,11 +3,11 @@ import { VerifierService } from "@/services/verifier";
 
 export class TokenService {
 
-  static readonly MINT_ENDPOINT = `http://127.0.0.1:8082/api/token/mint`;
+  static readonly MINT_ENDPOINT = new URL(`http://127.0.0.1:8082/api/token/mint`);
 
   static async mintToken(proofInfo: ProofInfo): Promise<TokenResp> {
     return VerifierService.verify<TokenResp>({
-      verifierURL: TokenService.MINT_ENDPOINT,
+      verifierURL: TokenService.MINT_ENDPOINT.href,
       proofInfo: proofInfo
     });
   }

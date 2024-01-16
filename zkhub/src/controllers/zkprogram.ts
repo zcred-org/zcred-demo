@@ -33,17 +33,20 @@ export function zkProgramController(
     const programPath = new URL(`./programs/${programId}.js`, ROOT_DIR);
     fs.writeFileSync(programPath, jalProgram.translate(), { flag: "w" });
     return {
-      programURL: new URL(`./api/zkprogram/${programId}/program.js`, domain).href
+      programURL: new URL(`./api/zkprogram/${programId}.js`, domain).href,
+      programId: programId
     };
   });
 
   fastify.get<{ Params: { programId: string } }>(
-    "/api/zkprogram/:programId/program.js",
+    "/api/zkprogram/:programId.js",
     async ({ params: { programId } }, resp) => {
+      console.log(programId);
       const programPath = new URL(`./programs/${programId}.js`, ROOT_DIR);
       resp.header("Content-Type", "text/javascript");
       resp.statusCode = 200;
       resp.send(fs.readFileSync(programPath, "utf8"));
     }
   );
+
 }

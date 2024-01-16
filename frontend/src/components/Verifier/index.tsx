@@ -1,28 +1,34 @@
-"use client"
-import { IAuroWallet } from "@zcredjs/mina";
-import { repeatUtil } from "@zcredjs/core";
+"use client";
+import { AuroWalletAdapter, IAuroWallet } from "@zcredjs/mina";
+import { Identifier, repeatUtil } from "@zcredjs/core";
 import { useEffect, useState } from "react";
 import { TokenService } from "@/services/token";
 import { VerifierService } from "@/services/verifier";
 import * as u8a from "uint8arrays";
 
-const base64urlProposeURL = u8a.toString(u8a.fromString(VerifierService.PROPOSE_URL), "base64url");
+function createRedirectURL(subjectId: Identifier) {
+  const proposalURL = new URL(VerifierService.PROPOSE_URL);
+  proposalURL.searchParams.set("subjectId.key", subjectId.key);
+  proposalURL.searchParams.set("subjectId.type", subjectId.type);
+  const base64urlProposeURL = u8a.toString(u8a.fromString(proposalURL.href), "base64url");
+  return `${window.location.origin}/subject?proposalURL=${base64urlProposeURL}`;
+}
 
 export function Verifier() {
 
-  const [wallet, setWallet] = useState<IAuroWallet | null>(null);
-  const [address, setAddress] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [walletAdapter, setWalletAdapter] = useState<AuroWalletAdapter | null>(null);
+  const [subjectId, setSubjectId] = useState<Identifier | null>(null);
 
   useEffect(() => {
     const wallet = "mina" in window && ((window as any).mina as IAuroWallet);
     if (wallet) {
-      setWallet(wallet);
+      setWalletAdapter(new AuroWalletAdapter(wallet));
     }
   }, []);
 
   useEffect(() => {
-    if (address) {
+    if (subjectId) {
       repeatUtil<boolean>(
         (stop) => {
           if (stop instanceof Error) {
@@ -33,7 +39,7 @@ export function Verifier() {
         },
         1000,
         async () => {
-          const resp = await TokenService.getToken(address);
+          const resp = await TokenService.getToken(subjectId.key);
           if (resp) {
             setToken(resp.token);
             return true;
@@ -42,35 +48,35 @@ export function Verifier() {
         }
       );
     }
-  }, [address]);
+  }, [subjectId]);
 
   async function onConnectWallet() {
-    if (wallet) {
-      const address = await wallet.requestAccounts().then(it => it[0]);
-      setAddress(address);
+    if (walletAdapter) {
+      const subjectId = await walletAdapter.getSubjectId();
+      setSubjectId(subjectId);
     }
   }
 
   const walletComponent = () => {
-    if (!wallet) {
+    if (!walletAdapter) {
       return <div><a href={"https://www.aurowallet.com/"}> Install Auro Wallet </a></div>;
     }
-    if (!address) {
+    if (!subjectId) {
       return <button onClick={onConnectWallet}> Connect Wallet </button>;
     }
-    if (address) {
-      return <div> Connected as: {address}</div>;
+    if (subjectId) {
+      return <div> Connected as: {subjectId.key}</div>;
     }
     return <></>;
   };
 
   const tokenComponent = () => {
-    if (!address) return <></>;
+    if (!subjectId) return <></>;
     if (token) {
       return <div>Your token: {token}</div>;
     } else {
       return <div>
-        <a href={`${window.location.origin}?proposeUrl=${base64urlProposeURL}`}>Get token</a>
+        <a href={createRedirectURL(subjectId)}>Get token</a>
       </div>;
     }
   };

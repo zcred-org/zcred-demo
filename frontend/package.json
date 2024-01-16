@@ -9,13 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@module-federation/nextjs-mf": "^8.1.6",
+    "@types/systemjs": "^6.13.5",
     "@zcredjs/core": "0.0.2",
-    "@zcredjs/mina": "0.0.2",
+    "@zcredjs/mina": "0.0.3",
     "next": "14.0.4",
     "o1js": "0.15.0",
     "o1js-jal": "0.0.4",
     "react": "^18",
     "react-dom": "^18",
+    "systemjs": "^6.14.3",
+    "systemjs-babel": "^0.3.2",
     "uint8arrays": "^4.0.3"
   },
   "devDependencies": {

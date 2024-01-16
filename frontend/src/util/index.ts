@@ -23,3 +23,8 @@ export const PublicInputMapper = {
   toJson: toJsonPublicInput,
   fromJson: fromJsonPublicInput
 };
+
+
+export function contained<T extends string>(field: T, o: object): o is { [K in T]: any } {
+  return field in o;
+}

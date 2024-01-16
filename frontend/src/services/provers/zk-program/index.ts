@@ -9,34 +9,35 @@ import type {
 } from "./worker";
 import { Program } from "o1js-jal";
 import { PassportCred } from "@zcredjs/core";
+import { contained } from "@/util/index";
 
-function isContained<T extends string>(o: object, field: T): o is {[K in T]: any} {
-  return field in o
-}
 
 function isCreateProofResp(data: unknown): data is CreateProofResp {
-  return (
+  console.log(data);
+  const result = (
     typeof data === "object" &&
     data !== null &&
-    isContained(data, 'id') &&
+    contained("id", data) &&
     typeof data.id === "number" &&
-    "verificationKey" in data &&
+    contained("verificationKey", data) &&
     typeof data.verificationKey === "string" &&
-    "proof" in data &&
+    contained("proof", data) &&
     typeof data.proof === "object" &&
     data.proof !== null &&
-    "publicInput" in data &&
+    contained("publicInput", data) &&
     typeof data.publicInput === "object" &&
     data.publicInput !== null);
+  console.log(result);
+  return result;
 }
 
 function isInitResp(data: unknown): data is WorkerInitResp {
   return (
     typeof data === "object" &&
     data !== null &&
-    "id" in data &&
+    contained("id", data) &&
     typeof data.id === "number" &&
-    "initialized" in data &&
+    contained("initialized", data) &&
     typeof data.initialized === "boolean");
 }
 
@@ -44,7 +45,7 @@ function isErrorResp(data: unknown): data is ErrorResp {
   return (
     typeof data === "object" &&
     data !== null &&
-    "error" in data &&
+    contained("error", data) &&
     typeof data.error === "string"
   );
 }
@@ -81,10 +82,10 @@ export class ZkProgramProver {
     const { initialized } = await prover["initPromise"];
     if (!initialized) throw new Error(`ZK program prover not initialized`);
     const proofResp = await prover.createProof(program, cred);
+    console.log("Proof resp", JSON.stringify(proofResp, null, 2));
     if (proofResp.error) {
       throw new Error(proofResp.error);
     }
-    await prover.terminate();
     return proofResp;
   }
 

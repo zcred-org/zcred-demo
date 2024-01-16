@@ -6,8 +6,8 @@ export class VerifierService {
 
   private constructor() {}
 
-  static async getProposal(proposeURL: string): Promise<Proposal> {
-    const endpoint = new URL(proposeURL);
+  static async getProposal(proposalURL: string): Promise<Proposal> {
+    const endpoint = new URL(proposalURL);
     const resp = await fetch(endpoint);
     if (resp.ok) return resp.json();
     const message = `Get proposal response error. URL: ${endpoint.href}, body: ${await resp.text()}`;
@@ -18,6 +18,7 @@ export class VerifierService {
   static async verify<TOut = unknown>({ proofInfo, verifierURL }: VerifyReq): Promise<TOut> {
     const endpoint = new URL(verifierURL);
     const resp = await fetch(endpoint, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json"
       },

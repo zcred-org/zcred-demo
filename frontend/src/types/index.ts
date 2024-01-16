@@ -30,6 +30,7 @@ export type ProofInfo = {
 
 export type CreateProgramResp = {
   programURL: string;
+  programId: string;
 }
 
 export type VerifyReq = {

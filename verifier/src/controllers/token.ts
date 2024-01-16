@@ -16,7 +16,8 @@ export function tokenController(
   fastify.post<{ Body: VerifyArgs }>(MINT_TOKEN_ENDPOINT, async ({ body }, resp) => {
     const publicInput = PublicInputMapper.fromJson(body.publicInput);
     const verified = await zkProgramVerifier.verifyProof({
-      ...body,
+      verificationKey: body.verificationKey,
+      proof: body.proof,
       publicInput: publicInput
     });
     if (!verified) {

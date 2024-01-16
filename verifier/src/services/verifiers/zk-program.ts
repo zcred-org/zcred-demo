@@ -4,8 +4,25 @@ import * as u8a from "uint8arrays";
 import { hash as sha256 } from "@stablelib/sha256";
 import { ROOT_DIR } from "../../util/index.js";
 import fs from "node:fs";
-import { Field, JsonProof, verify } from "o1js";
+import { Field, JsonProof, verify, ZkProgram } from "o1js";
 import { PublicInput } from "../../types.js";
+
+const zkProgram = ZkProgram({
+  name: "123",
+  publicInput: Field,
+  methods: {
+    execute: {
+      privateInputs: [
+        Field
+      ],
+      method(publicInput: Field, field: Field) {
+        publicInput.equals(field).assertTrue();
+      }
+    }
+  }
+});
+
+zkProgram.compile()
 
 export type InitProgramReq = {
   program: Program;
@@ -90,7 +107,8 @@ async function initZkProgram({ program }: InitProgramReq): Promise<InitProgramRe
     fs.writeFileSync(programPath, jalProgram.translate(), { flag: "w" });
     const { zkProgram } = await import(programPath.href);
     console.log("Compile zk-program, start");
-    await zkProgram.compile();
+    const { verificationKey } = await zkProgram.compile();
+    console.log(verificationKey);
     console.log("Compile zk-program, end");
     return { status: "ok" };
   } catch (e) {
@@ -121,7 +139,9 @@ async function verifyProof({
     if (!validatePublicInput(publicInput, proof)) {
       throw new Error(`Incorrect publicInput in request body`);
     }
+    console.log(`Start proof verification. Proof: ${proof}; Verification key: ${verificationKey}`);
     const verified = await verify(proof, verificationKey);
+    console.log(`Proof verification result`, verified);
     return {
       verified
     };
