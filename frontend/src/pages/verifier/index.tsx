@@ -1,4 +1,4 @@
-import { Verifier } from "@/components/Verifier/index";
+import { Verifier } from "@/components/verifier/index";
 
 export default function Home() {
 

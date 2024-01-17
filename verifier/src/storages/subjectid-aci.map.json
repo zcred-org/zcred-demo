@@ -1,6 +1,10 @@
 {
   "subjectIdToAci": {
+    "B62qqXhJ8qgXdApGoAvZHeXrHEg6YGqmThFcRN8xKqAvJsqjmUMVaZE": "279TpYJ1cw5yRDsmrKpchwUytfkzJFuZgN9LdFnfDMWy",
+    "B62qkJcX7duTrEw2KQX1BNBicwcgcAeRjKySKL5KaHmmM1g5gA2uMgT": "2kC5Hy1b1HcG9SztXLoaQ5RpZZsAvZW6ML64dVg2RaLY"
   },
   "aciToSubjectId": {
+    "279TpYJ1cw5yRDsmrKpchwUytfkzJFuZgN9LdFnfDMWy": "B62qqXhJ8qgXdApGoAvZHeXrHEg6YGqmThFcRN8xKqAvJsqjmUMVaZE",
+    "2kC5Hy1b1HcG9SztXLoaQ5RpZZsAvZW6ML64dVg2RaLY": "B62qkJcX7duTrEw2KQX1BNBicwcgcAeRjKySKL5KaHmmM1g5gA2uMgT"
   }
 }

@@ -3,7 +3,6 @@ import { JsonProof, Proof, verify } from "o1js";
 import { PassportCred } from "@zcredjs/core";
 import { JsonPublicInput, PublicInput } from "@/types/index";
 import { contained, PublicInputMapper } from "@/util/index";
-import { ZkHub } from "@/services/zk-hub";
 
 export type CreateProofResult = {
   verificationKey: string;
@@ -14,12 +13,12 @@ export type CreateProofResult = {
 
 async function createProof(program: Program, cred: PassportCred): Promise<CreateProofResult> {
   try {
-    const { programURL, programId } = await ZkHub.createProgram(program);
+    // const { programURL, programId } = await ZkHub.createProgram(program);
     const jalProgram = o1jsJal.initProgram(program);
-    console.log(`http://localhost:8081/api/zkprogram/${programId}.js`);
-    const { zkProgram, PublicInput } = await import(
-      /* webpackIgnore: true */
-      `http://localhost:8081/api/zkprogram/${programId}.js`);
+    const {
+      zkProgram,
+      PublicInput    // @ts-ignore
+    } = await import(`http://127.0.0.1:8081/api/zkprogram/zEy5WcEhtOQ_h7as6L6xhfsRZV6NpUA-eh7eWjTLKek.js`);
     console.log(`zk-program imported`);
     const { verificationKey } = await zkProgram.compile();
     console.log(`zk-program compiled`);
@@ -48,7 +47,7 @@ async function createProof(program: Program, cred: PassportCred): Promise<Create
     );
     console.log(`zk-program execute end`);
     const verified = await verify(proof.toJSON(), verificationKey.data);
-    console.log(verified);
+    console.log(`proof verified`, verified);
     return {
       verificationKey: verificationKey.data,
       proof: proof.toJSON(),

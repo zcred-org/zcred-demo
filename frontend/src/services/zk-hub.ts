@@ -18,6 +18,6 @@ export class ZkHub {
       console.log(message);
       throw new Error(message);
     }
-    return (await createResp.json()) as { programURL: string };
+    return (await createResp.json()) as { programURL: string, programId: string };
   }
 }

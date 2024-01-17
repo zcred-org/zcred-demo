@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+button {
+  background-color: cornflowerblue;
+  color: aliceblue;
+  padding: 4px;
+  text-align: center;
+  border-radius: 2px;
+  min-width: 160px;
+}

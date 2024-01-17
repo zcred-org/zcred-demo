@@ -4,6 +4,7 @@ import { JsonProof, Proof, verify } from "o1js";
 import fs from "node:fs";
 import * as a from "uvu/assert";
 import { MINA_VERIFIER_PROGRAM, ZkProgramVerifier } from "../../../src/services/verifiers/zk-program.js";
+import { ROOT_DIR } from "../../../src/util/index.js";
 
 const test = suite("ZK-program verifier tests");
 
@@ -140,12 +141,17 @@ test("passport zk-credential proof verification", async () => {
     ...privateInput
   );
   console.log("Calculate proof end", (new Date().getTime() - startCreateProof) / 1000, "s");
+  fs.writeFileSync(new URL("./program.json", ROOT_DIR), JSON.stringify({
+    ...proof.toJSON(),
+    verificationKey
+  }, null, 2));
   const verified = await zkProgramVerifier.verifyProof({
     proof: proof.toJSON(),
     verificationKey,
     publicInput
   });
   a.ok(verified, `zk-program is not verified`);
+  console.log(proof.toJSON());
   const detachedProof: JsonProof = {
     "publicInput": [
       "3914235341174",

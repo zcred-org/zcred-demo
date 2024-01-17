@@ -1,7 +1,9 @@
-import Subject from "@/components/Subject/index";
+import Subject from "@/components/subject/index";
 
 export default function Home() {
 
 
-  return <Subject/>;
+  return (<div>
+    <Subject/>
+  </div>);
 }

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { TokenService } from "@/services/token";
 import { VerifierService } from "@/services/verifier";
 import * as u8a from "uint8arrays";
+import styles from "./styles.module.css";
 
 function createRedirectURL(subjectId: Identifier) {
   const proposalURL = new URL(VerifierService.PROPOSE_URL);
@@ -59,7 +60,7 @@ export function Verifier() {
 
   const walletComponent = () => {
     if (!walletAdapter) {
-      return <div><a href={"https://www.aurowallet.com/"}> Install Auro Wallet </a></div>;
+      return <div><a href={"https://www.aurowallet.com/"} target={"_blank"}> Install Auro Wallet </a></div>;
     }
     if (!subjectId) {
       return <button onClick={onConnectWallet}> Connect Wallet </button>;
@@ -75,14 +76,16 @@ export function Verifier() {
     if (token) {
       return <div>Your token: {token}</div>;
     } else {
-      return <div>
-        <a href={createRedirectURL(subjectId)}>Get token</a>
-      </div>;
+      return <a href={createRedirectURL(subjectId)} target={"_blank"}>
+        <button>
+          Get token
+        </button>
+      </a>;
     }
   };
 
   return (
-    <div>
+    <div className={styles.container}>
       <div>
         {walletComponent()}
       </div>

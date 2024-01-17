@@ -48,5 +48,4 @@ export function zkProgramController(
       resp.send(fs.readFileSync(programPath, "utf8"));
     }
   );
-
 }

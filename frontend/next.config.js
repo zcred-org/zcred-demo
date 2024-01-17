@@ -27,7 +27,7 @@ const nextConfig = {
   },
   reactStrictMode: false,
   experimental: {
-    urlImports: ["http://127.0.0.1:8081/api/zkprogram"],
+    urlImports: [`http://127.0.0.1:8081/api/zkprogram/zEy5WcEhtOQ_h7as6L6xhfsRZV6NpUA-eh7eWjTLKek.js`],
   },
 };
 

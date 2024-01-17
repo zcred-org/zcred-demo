@@ -2,11 +2,14 @@
 import { useEffect, useState } from "react";
 import * as u8a from "uint8arrays";
 import { AuroWalletAdapter, IAuroWallet } from "@zcredjs/mina";
-import { Identifier, PassportCred } from "@zcredjs/core";
+import { ChallengeReq, HttpIssuer, Identifier, PassportCred } from "@zcredjs/core";
 import { VerifierService } from "@/services/verifier";
 import { ZkProgramProver } from "@/services/provers/zk-program/index";
 import { TokenService } from "@/services/token";
-import { TokenResp } from "@/types/index";
+import { Proposal, TokenResp } from "@/types/index";
+import styles from "./styles.module.css";
+import JsonModal from "@/components/modal/json-modal/index";
+
 
 const stubCredential: PassportCred = {
   "meta": {
@@ -223,20 +226,28 @@ function paramsGetSubjectId(proposalURL: URL): Identifier {
   );
 }
 
+const issuer = new HttpIssuer("https://api.dev.sybil.center/api/v1/zcred/issuers/passport-test/");
+
 function identifierEquals(first: Identifier, last: Identifier) {
   return first.key === last.key && first.type === last.type;
 }
+
+const SHOW_PROGRAM_ELEMENT_ID = "show-program-id";
+const SHOW_CREDENTIAL_ELEMENT_ID = "show-credential-id";
 
 export default function Subject() {
 
   const [proposalURL, setProposeURL] = useState<URL | null>(null);
   const [requiredSubjectId, setRequiredSubjectId] = useState<Identifier | null>(null);
   const [walletAdapter, setWalletAdapter] = useState<AuroWalletAdapter | null>(null);
-  const [connectedSubjectId, setConnectedSubjectId] = useState<Identifier | null>({
-    type: "mina:publickey",
-    key: "B62qqXhJ8qgXdApGoAvZHeXrHEg6YGqmThFcRN8xKqAvJsqjmUMVaZE"
-  });
+  const [connectedSubjectId, setConnectedSubjectId] = useState<Identifier | null>();
+  const [loading, setLoading] = useState<string>("");
   const [error, setError] = useState("");
+  const [credential, setCredential] = useState<PassportCred | null>(null);
+  const [proposal, setProposal] = useState<Proposal | null>(null);
+  const [isProgramOpen, setIsProgramOpen] = useState(false);
+  const [isCredentialOpen, setIsCredentialOpen] = useState(false);
+  const [isVerified, setIsIsVerified] = useState(false);
 
   useEffect(() => {
     const currentURL = new URL(window.location.href);
@@ -246,6 +257,8 @@ export default function Subject() {
         const proposalURL = new URL(u8a.toString(u8a.fromString(base64ProposalURL, "base64url")));
         setProposeURL(proposalURL);
         const subjectId = paramsGetSubjectId(proposalURL);
+        VerifierService.getProposal(proposalURL.href)
+          .then(proposal => setProposal(proposal));
         setRequiredSubjectId(subjectId);
       } catch (e) {
         setError("Bad verifier redirect attempt");
@@ -262,42 +275,146 @@ export default function Subject() {
     }
   }, []);
 
+  useEffect(() => {
+    const bodyElement = document.getElementsByTagName("body")[0]!;
+    const showJalElement = document.createElement("div");
+    showJalElement.id = SHOW_PROGRAM_ELEMENT_ID;
+    bodyElement.appendChild(showJalElement);
+    const showCredentialElement = document.createElement("div");
+    showCredentialElement.id = SHOW_CREDENTIAL_ELEMENT_ID;
+    bodyElement.appendChild(showCredentialElement);
+  }, []);
+
   async function onVerify() {
     try {
       if (proposalURL && requiredSubjectId && walletAdapter) {
-        const proposal = await VerifierService.getProposal(proposalURL.href);
-        console.log(`proposal:`, JSON.stringify(proposal, null, 2));
-        const proofResult = await ZkProgramProver.createProof(proposal.program, stubCredential);
-        console.log("proof result:",JSON.stringify(proofResult, null, 2));
-        const verifyResp = await VerifierService.verify<TokenResp>({
+        setLoading("Loading ...");
+        const _proposal = proposal
+          ? proposal
+          : await VerifierService.getProposal(proposalURL.href);
+        setProposal(_proposal);
+        const proofResult = await ZkProgramProver.createProof(_proposal.program, credential!);
+        await VerifierService.verify<TokenResp>({
           verifierURL: TokenService.MINT_ENDPOINT.href,
           proofInfo: proofResult
         });
-        console.log("verification done", JSON.stringify(verifyResp));
+        setIsIsVerified(true);
       }
     } catch (e) {
       console.log(String(e));
       setError(`Error during verification process`);
       setTimeout(() => setError(""), 2000);
+    } finally {
+      setLoading("");
     }
   }
 
-  async function onGetSubjectId() {
+  async function onWalletConnect() {
     try {
+      setLoading("Loading ...");
       if (walletAdapter && requiredSubjectId) {
         const subjectId = await walletAdapter.getSubjectId();
         if (identifierEquals(subjectId, requiredSubjectId)) {
           setConnectedSubjectId(subjectId);
-        } else setError(`You need connect as ${requiredSubjectId.key}`);
+        } else {
+          setError(`You need connect as ${requiredSubjectId.key}`);
+          setTimeout(() => setError(""), 3000);
+        }
       }
     } catch (e) {
       setError("Wallet connection error");
+      setTimeout(() => setError(""), 4000);
     } finally {
-      if (error) setTimeout(() => setError(""), 4000);
+      setLoading("");
     }
   }
 
-  return <>
-    <button onClick={onVerify}>verify</button>
-  </>;
+  async function onGetCredential() {
+    try {
+      if (walletAdapter) {
+        setLoading("Loading ...");
+        const challengeReq: ChallengeReq = {
+          subject: { id: await walletAdapter.getSubjectId() },
+          validUntil: new Date(2030, 0, 0).toISOString(),
+          options: {
+            chainId: await walletAdapter.getChainId()
+          }
+        };
+        const credential = await issuer.browserIssue!<PassportCred>({
+          challengeReq,
+          sign: walletAdapter.sign,
+        });
+        console.log(credential);
+        setCredential(credential);
+      }
+    } catch (e) {
+      console.log(String(e));
+      setError("Get passport credential error");
+      setTimeout(() => setError(""), 2000);
+    } finally {
+      setLoading("");
+    }
+  }
+
+  const walletElement = () => {
+    if (walletAdapter) {
+      if (!connectedSubjectId) {
+        return <button onClick={onWalletConnect}>Connect to wallet</button>;
+      } else {
+        return <div>Connected as: {connectedSubjectId.key} </div>;
+      }
+    } else return <div><a href={"https://www.aurowallet.com/"}>Install Auro wallet</a></div>;
+  };
+
+  const component = () => {
+    if (error) {
+      return <div>{error}</div>;
+    }
+    if (loading) {
+      return <div>{loading}</div>;
+    }
+    return (
+      <>
+        <JsonModal
+          json={(proposal?.program ? proposal.program : {})}
+          elementId={SHOW_PROGRAM_ELEMENT_ID}
+          isOpen={isProgramOpen}
+          setIsOpen={setIsProgramOpen}/>
+        <JsonModal
+          json={(credential!)}
+          elementId={SHOW_CREDENTIAL_ELEMENT_ID}
+          isOpen={isCredentialOpen}
+          setIsOpen={setIsCredentialOpen}/>
+        <div>
+          {walletElement()}
+        </div>
+        {!credential && connectedSubjectId && <div>
+          <button onClick={onGetCredential}>Get credential</button>
+        </div>}
+        {credential && <div>
+          <button onClick={() => setIsCredentialOpen(true)}>
+            Show credential
+          </button>
+        </div>}
+        {proposal && connectedSubjectId && <div>
+          <button onClick={() => setIsProgramOpen(true)}>
+            Show program
+          </button>
+        </div>}
+        {credential && proposal && !isVerified && <div>
+          <button onClick={onVerify}>Verify</button>
+        </div>}
+        {!isVerified && <div>
+          Not verified
+        </div>}
+        {isVerified && <div>
+          You verified !!!
+        </div>}
+      </>
+    );
+  };
+
+  return <div className={styles.container}>
+    {component()}
+  </div>;
 }
