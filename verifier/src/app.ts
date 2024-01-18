@@ -6,6 +6,9 @@ import { TokenService } from "./services/token.js";
 import { TokenStorage } from "./storages/token.js";
 import { proposeController } from "./controllers/propose.js";
 import { type Config } from "./types.js";
+import { VoteService } from "./services/vote.js";
+import { VoteStorage } from "./storages/vote.js";
+import { voteController } from "./controllers/vote.js";
 
 
 export class App {
@@ -13,6 +16,7 @@ export class App {
   readonly config: Config;
   private _zkProgramVerifier?: ZkProgramVerifier;
   private _tokenService?: TokenService;
+  private _voteService?: VoteService;
   initialize: boolean;
 
   get zkProgramVerifier() {
@@ -22,6 +26,11 @@ export class App {
 
   get tokenService() {
     if (this._tokenService) return this._tokenService;
+    throw new Error(`Initialize application first`);
+  }
+
+  get voteService() {
+    if (this._voteService) return this._voteService;
     throw new Error(`Initialize application first`);
   }
 
@@ -39,6 +48,7 @@ export class App {
     const app = new App();
     app._zkProgramVerifier = await ZkProgramVerifier.init(MINA_VERIFIER_PROGRAM);
     app._tokenService = new TokenService(new TokenStorage());
+    app._voteService = new VoteService(new VoteStorage());
     tokenController(
       app.fastify,
       app.zkProgramVerifier,
@@ -48,6 +58,11 @@ export class App {
       app.config,
       app.fastify,
       app.zkProgramVerifier
+    );
+    voteController(
+      app.fastify,
+      app.tokenService,
+      app.voteService
     );
     app.initialize = true;
     return app;

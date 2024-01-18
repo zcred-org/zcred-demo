@@ -6,6 +6,7 @@ import { TokenService } from "@/services/token";
 import { VerifierService } from "@/services/verifier";
 import * as u8a from "uint8arrays";
 import styles from "./styles.module.css";
+import { VoteService } from "@/services/vote";
 
 function createRedirectURL(subjectId: Identifier) {
   const proposalURL = new URL(VerifierService.PROPOSE_URL);
@@ -20,6 +21,8 @@ export function Verifier() {
   const [token, setToken] = useState<string | null>(null);
   const [walletAdapter, setWalletAdapter] = useState<AuroWalletAdapter | null>(null);
   const [subjectId, setSubjectId] = useState<Identifier | null>(null);
+  const [voteMessage, setVoteMessage] = useState("");
+  const [isVoted, setIsVoted] = useState<boolean>(false);
 
   useEffect(() => {
     const wallet = "mina" in window && ((window as any).mina as IAuroWallet);
@@ -58,6 +61,14 @@ export function Verifier() {
     }
   }
 
+  async function onVote(vote: "red" | "blue") {
+    if (subjectId) {
+      const { message, isVoted } = await VoteService.vote(subjectId.key, vote);
+      setIsVoted(isVoted);
+      setVoteMessage(message);
+    }
+  }
+
   const walletComponent = () => {
     if (!walletAdapter) {
       return <div><a href={"https://www.aurowallet.com/"} target={"_blank"}> Install Auro Wallet </a></div>;
@@ -84,6 +95,24 @@ export function Verifier() {
     }
   };
 
+  const voteComponent = () => {
+    if (!subjectId || !token) {
+      return <></>;
+    }
+    return (
+      <>
+        <div className={styles.vote_container}>
+          <button onClick={() => onVote("blue")}>Vote blue</button>
+          <button onClick={() => onVote("red")}>Vote red</button>
+        </div>
+        {voteMessage && <div
+          className={isVoted ? styles.vote_message__good : styles.vote_message__bad}>
+          {voteMessage}
+        </div>}
+      </>
+    );
+  };
+
   return (
     <div className={styles.container}>
       <div>
@@ -91,6 +120,9 @@ export function Verifier() {
       </div>
       <div>
         {tokenComponent()}
+      </div>
+      <div>
+        {voteComponent()}
       </div>
     </div>
   );

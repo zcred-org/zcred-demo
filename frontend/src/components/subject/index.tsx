@@ -247,7 +247,7 @@ export default function Subject() {
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [isProgramOpen, setIsProgramOpen] = useState(false);
   const [isCredentialOpen, setIsCredentialOpen] = useState(false);
-  const [isVerified, setIsIsVerified] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<"" | "verified" | "not-verified">("");
 
   useEffect(() => {
     const currentURL = new URL(window.location.href);
@@ -298,11 +298,12 @@ export default function Subject() {
           verifierURL: TokenService.MINT_ENDPOINT.href,
           proofInfo: proofResult
         });
-        setIsIsVerified(true);
+        setVerificationStatus("verified");
       }
     } catch (e) {
       console.log(String(e));
       setError(`Error during verification process`);
+      setVerificationStatus("not-verified")
       setTimeout(() => setError(""), 2000);
     } finally {
       setLoading("");
@@ -401,13 +402,16 @@ export default function Subject() {
             Show program
           </button>
         </div>}
-        {credential && proposal && !isVerified && <div>
+        {credential && proposal && !verificationStatus && <div>
           <button onClick={onVerify}>Verify</button>
         </div>}
-        {!isVerified && <div>
+        {!verificationStatus && !credential && !proposal && <div>
           Not verified
         </div>}
-        {isVerified && <div>
+        {credential && proposal && verificationStatus === "not-verified" && <div>
+          Not unique
+        </div>}
+        {verificationStatus === "verified" && <div>
           You verified !!!
         </div>}
       </>
